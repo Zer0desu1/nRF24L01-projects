@@ -1,0 +1,84 @@
+//Verici
+#include<SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+RF24 radio (9,10); //ce csn
+const byte kanal[6] = "00001";
+int mesaj[2];
+#define buton 7
+#define X A0
+//#define Y A1
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  radio.openWritingPipe(kanal);
+   radio.setPALevel(RF24_PA_MIN);
+   radio.setDataRate( RF24_250KBPS );
+  radio.stopListening();
+pinMode(buton,INPUT_PULLUP);
+pinMode(X,INPUT);
+//pinMode(Y,INPUT);
+}
+
+void loop() {
+  int x=analogRead(X);
+//  int y=analogRead(Y);
+int a=digitalRead(buton);
+  if(a==0){
+    mesaj[0]=50;
+  }else{mesaj[0]=0;}
+    mesaj[1]=x;
+  radio.write(&mesaj,sizeof(mesaj));
+  Serial.println("x: ");Serial.println(x);
+ // Serial.println("y: ");Serial.println(y);
+  Serial.println(digitalRead(buton));
+
+ 
+}
+
+
+
+
+
+//Alıcı
+#include<SPI.h>
+#include <nRF24L01.h>
+#include <RF24.h>
+#include<Servo.h>
+Servo s;
+RF24 radio (9,10); //ce csn
+const byte kanal[6] = "00001";
+int mesaj[2];
+int led=4;
+void setup() {
+  Serial.begin(9600);
+  s.attach(8);
+  radio.begin();
+  delay(1000);
+  radio.openReadingPipe(0,kanal);
+   radio.setPALevel(RF24_PA_MIN);
+   radio.setDataRate( RF24_250KBPS );
+  radio.startListening();  
+pinMode(led,OUTPUT);
+
+}
+
+void loop() {
+  while(radio.available()){
+    
+    
+      radio.read(&mesaj,sizeof(mesaj));
+      Serial.println(mesaj[0]);
+      if(mesaj[0]==50){
+        
+        digitalWrite(led,HIGH);   
+        delay(100);
+      }
+      
+      
+      digitalWrite(led,LOW);
+      
+    
+     s.write(mesaj[1]);
+  delay(20);
+}}
